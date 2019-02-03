@@ -19,17 +19,9 @@ def post_detail(request, pk):
 def post_new(request):
     if request.method == "POST":
         form = PostForm(request.POST)
+        return validate_form_post(request, form)
 
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.published_date = timezone.now()
-            post.save()
-
-            return redirect('post_detail', pk=post.pk)
-    else:
-        form = PostForm()
-
+    form = PostForm()
     return render(request, 'blog/post_edit.html', {'form': form})
 
 def post_edit(request, pk):
@@ -37,15 +29,20 @@ def post_edit(request, pk):
 
     if request.method == "POST":
         form = PostForm(request.POST, instance=post)
+        return validate_form_post(request, form)
 
-        if form.is_valid():
-            post = form.save(commit=False)
-            post.author = request.user
-            post.published_date = timezone.now()
-            post.save()
-
-            return redirect('post_detail', pk=post.pk)
-    else:
-        form = PostForm(instance=post)
-
+    form = PostForm(instance=post)
     return render(request, 'blog/post_edit.html', {'form': form})
+
+def validate_form_post(request, form):
+    if form.is_valid():
+        post = save_form(request, form)
+        return redirect('post_detail', pk=post.pk)
+
+def save_form(request, form):
+    post = form.save(commit=False)
+    post.author = request.user
+    post.published_date = timezone.now()
+    post.save()
+
+    return post
